@@ -69,9 +69,6 @@ void listenForInput(CommandQueue& handler, Player& player, bool& running) {
                 cmd.type = CommandType::addSong;
                 {
                     lock_guard<mutex> lock(consoleMutex);
-                    cout << "ID: ";
-                    getline(cin, line);
-                    cmd.song.id = stoi(line);
                     cout << "Artist: ";
                     getline(cin, cmd.song.artist);
                     cout << "Album: ";

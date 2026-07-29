@@ -1,8 +1,11 @@
 //g++ -std=c++17 -pthread Song.cpp TrackList.cpp AudioSettings.cpp ConsoleUI.cpp Player.cpp CommandQueue.cpp Utilities.cpp main.cpp -o musicplayer
 //./musicplayer
+// termios in the future
+// add check for commands.....
 #include <iostream>
 #include <thread>
 #include <mutex>
+#include <chrono>
 #include "Song.h"
 #include "TrackList.h"
 #include "AudioSettings.h"
@@ -13,6 +16,7 @@
 #include "Utilities.h"
 using namespace std;
 
+// g++ -std=c++17 -pthread Song.cpp AudioSettings.cpp TrackList.cpp ConsoleUI.cpp Player.cpp CommandQueue.cpp Utilities.cpp main.cpp -o MusicPlayer
 int main() {
     CommandQueue commands;
 
@@ -30,13 +34,32 @@ int main() {
     Player player(currentPlaylist);
     bool running = true;
 
+     cout << "\n> - increase volume\n";
+                        cout << "< - decrease volume\n";
+                        cout << "e - view EQ settings\n";
+                        cout << "E - adjust EQ settings\n";
+                        cout << "s - skip\n";
+                        cout << "p - pause/resume\n";
+                        cout << "S - toggle shuffle\n";
+                        cout << "q - quit\n";
+                        cout << "l - list songs\n";
+                        cout << "f - find song\n";
+                        cout << "a - add song\n";
+                        cout << "r - remove song\n";
+                        cout << "R all - repeat all songs\n";
+                        cout << "R one - repeat one song\n";
+                        cout << "b - previous song \n";
+                        cout << "h - help\n";
+
+
     thread inputThread(listenForInput, ref(commands), ref(player), ref(running));
     ConsoleUI::displayPlaying(player.getCurrentSong());
     ConsoleUI::displaySettings(player.isPaused(), player.getAudioSettings(), currentPlaylist.isShuffled(), player.getRepeatMode());
-
     while (running) {
         if (player.getCurrentSong() != nullptr && !player.isPaused()) {
             player.update();
+        }else{
+            this_thread::sleep_for(chrono::milliseconds(50));
         }
         while (commands.hasCommand()) {
             Command cmd = commands.getNextCommand();
@@ -44,7 +67,7 @@ int main() {
                 case CommandType::skip: {
                     clearProgressLine();
                     if (player.skip()) refreshUI(player, currentPlaylist);
-                    else cout << "\nNo songs left.\n";
+                    else cout << "\nNo songs left... Add another song (a) or exit (q): " << flush;
                     break;
                 }
 
@@ -70,7 +93,7 @@ int main() {
                     clearProgressLine();
                     currentPlaylist.addSong(cmd.song.artist, cmd.song.album, cmd.song.songName, cmd.song.length);
                     if (player.getCurrentSong() == nullptr)
-                        player.setCurrentSong(currentPlaylist.getFirstSong());
+                        player.setCurrentSong(currentPlaylist.getLastSong());
                     refreshUI(player, currentPlaylist);
                     break;
                 }
@@ -152,8 +175,7 @@ int main() {
                     clearProgressLine();
                     {
                         lock_guard<mutex> lock(consoleMutex);
-                        cout << "\n";
-                        cout << "> - increase volume\n";
+                        cout << "\n> - increase volume\n";
                         cout << "< - decrease volume\n";
                         cout << "e - view EQ settings\n";
                         cout << "E - adjust EQ settings\n";

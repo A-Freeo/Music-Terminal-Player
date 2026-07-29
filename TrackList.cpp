@@ -15,7 +15,7 @@ void TrackList::rebuildQueueFromLibrary() {
 //-----------------------------
 // Song Management
 Song* TrackList::addSong(const string& artist, const string& album, const string& name, int length) {
-    auto song = make_unique<Song>(nextId++, artist, album, name, length);
+    auto song = make_unique<Song>(++nextId, artist, album, name, length);
     Song* raw = song.get();
     library.push_back(std::move(song)); // transfers ownership
     playbackQueue.push_back(raw);
@@ -75,6 +75,7 @@ bool TrackList::isShuffled() const { return shuffled; }
 //-----------------------------
 Song* TrackList::getSong(size_t index) const { return playbackQueue[index]; }
 Song* TrackList::getFirstSong() const { return playbackQueue.empty() ? nullptr : playbackQueue[0]; }
+Song* TrackList::getLastSong() const { return playbackQueue.empty() ? nullptr : playbackQueue[library.size() - 1];}
 size_t TrackList::size() const { return playbackQueue.size(); }
 
 size_t TrackList::indexOf(Song* song) const {

@@ -24,7 +24,13 @@ void Player::update() {
 
     if (secondsPassed >= currentSong->getLength()) {
         if (!collectingInput) ConsoleUI::displayProgress(currentSong->getLength(), 0);
-        if (!skip()) return;
+        if (!skip()){
+            {
+                lock_guard<mutex> lock(consoleMutex);
+                cout << "\nNo songs left... Add another song (a) or exit (q): " << flush;
+            }
+            return;
+        }
 
         if (!collectingInput) {
             cout << "\n";

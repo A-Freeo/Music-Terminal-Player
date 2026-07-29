@@ -33,6 +33,7 @@ public:
 
     Song* getSong(size_t index) const;
     Song* getFirstSong() const;
+    Song* getLastSong() const;
     size_t size() const;
     size_t indexOf(Song* song) const;
 };
