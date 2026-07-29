@@ -2,6 +2,7 @@
 //./musicplayer
 // maybe termios in the future
 #include <iostream>
+#include <fstream>
 #include <thread>
 #include <mutex>
 #include <chrono>
@@ -13,22 +14,32 @@
 #include "Command.h"
 #include "CommandQueue.h"
 #include "Utilities.h"
+#include "FileManager.h"
 using namespace std;
 
-// g++ -std=c++17 -pthread Song.cpp AudioSettings.cpp TrackList.cpp ConsoleUI.cpp Player.cpp CommandQueue.cpp Utilities.cpp main.cpp -o MusicPlayer
+// g++ -std=c++17 -pthread Song.cpp AudioSettings.cpp TrackList.cpp ConsoleUI.cpp Player.cpp CommandQueue.cpp Utilities.cpp FileManager.cpp main.cpp -o MusicPlayer
 int main() {
     CommandQueue commands;
 
     TrackList currentPlaylist;
-    currentPlaylist.addSong("Radiohead", "OK Computer", "Paranoid Android", 383);
-    currentPlaylist.addSong("Pink Floyd", "The Wall", "Comfortably Numb", 384);
-    currentPlaylist.addSong("Nirvana", "Nevermind", "Lithium", 257);
-    currentPlaylist.addSong("test", "test", "test1", 30);
-    currentPlaylist.addSong("test", "test", "test2", 30);
-    currentPlaylist.addSong("test", "test", "test3", 30);
-    currentPlaylist.addSong("test", "test", "test4", 30);
-    currentPlaylist.addSong("test", "test", "test5", 30);
-    currentPlaylist.addSong("test", "test", "test6", 30);
+
+    string fileName;
+    cout << "Enter the file name you want to load (CSV) (quit to exit): ";
+    cin >> fileName;
+    FileManager fileManager(fileName);
+    if(fileName == "quit"){
+        return 0;
+    }
+
+    while(!(fileManager.loadFile(currentPlaylist))){
+        cout << "File failed to load (Invalid file name or unexpected error while loading file)\n";
+        cout << "Enter the file name you want to load (CSV) (quit to exit): ";
+        cin >> fileName;
+        fileManager.setPlaylist(fileName);
+        if(fileName == "quit"){
+            return 0;
+        }
+    }
 
     Player player(currentPlaylist);
     bool running = true;
@@ -48,6 +59,8 @@ int main() {
                         cout << "R all - repeat all songs\n";
                         cout << "R one - repeat one song\n";
                         cout << "b - previous song \n";
+                        cout << "F load - load a new playlist into the player from a file\n";
+                        cout << "F save - save current playlist into a file\n";
                         cout << "h - help\n";
 
 
@@ -169,6 +182,20 @@ int main() {
                     player.setEQ(cmd.bass, cmd.mids, cmd.treble);
                     refreshUI(player, currentPlaylist);
                     break;
+
+                case CommandType::fileManagement:{
+                    clearProgressLine();
+                    FileManager fileManager(cmd.fileName);
+                    if(cmd.fileMode == "load"){
+                        lock_guard<mutex> lock(consoleMutex);
+                        cout << (fileManager.loadFile(currentPlaylist) ? "Loaded!\n" : "Failed to load file please try again\n");
+                    }else if(cmd.fileMode == "save"){
+                        lock_guard<mutex> lock(consoleMutex);
+                        cout << (fileManager.saveFile(currentPlaylist) ? "Saved!\n" : "Failed to save file please try again\n");
+                    }
+                    refreshUI(player, currentPlaylist);
+                    break;
+                }
 
                 case CommandType::help: {
                     clearProgressLine();

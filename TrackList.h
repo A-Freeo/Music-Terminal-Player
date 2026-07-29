@@ -16,16 +16,17 @@ private:
     bool shuffled;
     int nextId = 0;
 
-    void rebuildQueueFromLibrary();
-
 public:
     TrackList();
+
+    void rebuildQueueFromLibrary();
 
     static constexpr size_t NOT_FOUND = static_cast<size_t>(-1);
 
     Song* addSong(const std::string& artist, const std::string& album, const std::string& name, int length);
     bool removeSong(int id);
     Song* searchSong(int id) const;
+    bool clear();
 
     void shuffle(Song* currentSong);
     void unshuffle();

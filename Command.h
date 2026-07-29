@@ -26,6 +26,7 @@ enum class CommandType
     increaseVolume,
     decreaseVolume,
     setEQ,
+    fileManagement,
     help,
     quit,
     repeat,
@@ -48,6 +49,8 @@ struct Command {
     int mids = 5;
     int treble = 5;
     std::string repeatMode;
+    std::string fileMode;
+    std::string fileName;
 };
 
 #endif

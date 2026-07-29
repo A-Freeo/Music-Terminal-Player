@@ -78,6 +78,14 @@ Song* TrackList::getFirstSong() const { return playbackQueue.empty() ? nullptr :
 Song* TrackList::getLastSong() const { return playbackQueue.empty() ? nullptr : playbackQueue[library.size() - 1];}
 size_t TrackList::size() const { return playbackQueue.size(); }
 
+bool TrackList::clear(){
+    library.clear();
+    playbackQueue.clear();
+    nextId = 0;
+    shuffled = false;
+    return true;
+}
+
 size_t TrackList::indexOf(Song* song) const {
     auto it = find(playbackQueue.begin(), playbackQueue.end(), song);
     if (it == playbackQueue.end()) return NOT_FOUND;

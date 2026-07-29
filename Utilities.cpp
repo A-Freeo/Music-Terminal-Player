@@ -42,8 +42,6 @@ void listenForInput(CommandQueue& handler, Player& player, bool& running) {
     while (running && getline(cin, line)) {
         if (line.empty()) continue;
 
-        // When the playlist has run out (no current song), only allow adding a
-        // song or quitting — every other command has nothing to act on.
         if (player.getCurrentSong() == nullptr && line[0] != 'a' && line[0] != 'q') {
             lock_guard<mutex> lock(consoleMutex);
             cout << "\nNo songs left. Add another song (a) or exit (q): " << flush;
@@ -200,6 +198,20 @@ void listenForInput(CommandQueue& handler, Player& player, bool& running) {
                 handler.addCommand(cmd);
                 break;
 
+            case 'F':
+                cmd.type = CommandType::fileManagement;
+                player.startInput();
+                {
+                    lock_guard<mutex> lock(consoleMutex);
+                    cout << "File Mode: (load/save): ";
+                    getline(cin, cmd.fileMode);
+                    cout << "Enter file name: ";
+                    getline(cin, cmd.fileName);
+                }
+                player.endInput();
+                handler.addCommand(cmd);
+                break;
+                    
             default: {
                 lock_guard<mutex> lock(consoleMutex);
                 cout << "Unknown command.\n";
