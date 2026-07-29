@@ -40,4 +40,5 @@ The player starts with a small built-in playlist.
 
 - Playback is simulated, not real audio — a song's "length" is just how long its progress bar runs. Volume and EQ are display-only.
 - The progress bar and your keystrokes share one terminal line, so typing mid-playback can look visually jumbled even though the input still registers. A raw-terminal (termios) input mode would fix this and is noted as a future improvement.
-- No way to load songs from an external file (e.g. a CSV) — the starting playlist is hardcoded, and any other songs have to be added by hand at runtime.
+- Loading a playlist clears the current one *before* parsing the file, so if a load fails partway through, the existing playlist is lost with nothing loaded in its place.
+- Saving refuses to overwrite an existing file — you can't re-save or update a playlist under a name that already exists; you have to pick a new name.
