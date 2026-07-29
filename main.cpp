@@ -1,7 +1,6 @@
 //g++ -std=c++17 -pthread Song.cpp TrackList.cpp AudioSettings.cpp ConsoleUI.cpp Player.cpp CommandQueue.cpp Utilities.cpp main.cpp -o musicplayer
 //./musicplayer
-// termios in the future
-// add check for commands.....
+// maybe termios in the future
 #include <iostream>
 #include <thread>
 #include <mutex>

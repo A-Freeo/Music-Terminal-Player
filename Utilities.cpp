@@ -8,6 +8,17 @@
 #include <mutex>
 using namespace std;
 
+// Safely parse an int from user input. Returns false instead of throwing on
+// empty/non-numeric/out-of-range input, so a bad entry can't crash the program.
+static bool tryParseInt(const string& s, int& out) {
+    try {
+        out = stoi(s);
+        return true;
+    } catch (...) {
+        return false;
+    }
+}
+
 // Clears the current line in the console, used to refresh the progress bar
 void clearProgressLine() {
     constexpr int AMOUNT_OF_CONSOLE_SPACES = 80;
@@ -30,6 +41,14 @@ void listenForInput(CommandQueue& handler, Player& player, bool& running) {
 
     while (running && getline(cin, line)) {
         if (line.empty()) continue;
+
+        // When the playlist has run out (no current song), only allow adding a
+        // song or quitting — every other command has nothing to act on.
+        if (player.getCurrentSong() == nullptr && line[0] != 'a' && line[0] != 'q') {
+            lock_guard<mutex> lock(consoleMutex);
+            cout << "\nNo songs left. Add another song (a) or exit (q): " << flush;
+            continue;
+        }
 
         Command cmd;
 
@@ -67,6 +86,7 @@ void listenForInput(CommandQueue& handler, Player& player, bool& running) {
             case 'a': {
                 player.startInput();
                 cmd.type = CommandType::addSong;
+                bool valid = true;
                 {
                     lock_guard<mutex> lock(consoleMutex);
                     cout << "Artist: ";
@@ -77,24 +97,31 @@ void listenForInput(CommandQueue& handler, Player& player, bool& running) {
                     getline(cin, cmd.song.songName);
                     cout << "Length (seconds): ";
                     getline(cin, line);
-                    cmd.song.length = stoi(line);
+                    if (!tryParseInt(line, cmd.song.length) || cmd.song.length <= 0) {
+                        cout << "Invalid length. Song not added.\n";
+                        valid = false;
+                    }
                 }
                 player.endInput();
-                handler.addCommand(cmd);
+                if (valid) handler.addCommand(cmd);
                 break;
             }
 
             case 'r': {
                 player.startInput();
                 cmd.type = CommandType::removeSong;
+                bool valid = true;
                 {
                     lock_guard<mutex> lock(consoleMutex);
                     cout << "Song ID: ";
                     getline(cin, line);
-                    cmd.song.id = stoi(line);
+                    if (!tryParseInt(line, cmd.song.id)) {
+                        cout << "Invalid ID.\n";
+                        valid = false;
+                    }
                 }
                 player.endInput();
-                handler.addCommand(cmd);
+                if (valid) handler.addCommand(cmd);
                 break;
             }
 
@@ -106,14 +133,18 @@ void listenForInput(CommandQueue& handler, Player& player, bool& running) {
             case 'f': {
                 player.startInput();
                 cmd.type = CommandType::searchSong;
+                bool valid = true;
                 {
                     lock_guard<mutex> lock(consoleMutex);
                     cout << "Song ID: ";
                     getline(cin, line);
-                    cmd.song.id = stoi(line);
+                    if (!tryParseInt(line, cmd.song.id)) {
+                        cout << "Invalid ID.\n";
+                        valid = false;
+                    }
                 }
                 player.endInput();
-                handler.addCommand(cmd);
+                if (valid) handler.addCommand(cmd);
                 break;
             }
 
@@ -145,20 +176,22 @@ void listenForInput(CommandQueue& handler, Player& player, bool& running) {
             case 'E': {
                 player.startInput();
                 cmd.type = CommandType::setEQ;
+                bool valid = true;
                 {
                     lock_guard<mutex> lock(consoleMutex);
                     cout << "Bass (0-10): ";
                     getline(cin, line);
-                    cmd.bass = stoi(line);
+                    if (!tryParseInt(line, cmd.bass)) valid = false;
                     cout << "Mid Range (0-10): ";
                     getline(cin, line);
-                    cmd.mids = stoi(line);
+                    if (!tryParseInt(line, cmd.mids)) valid = false;
                     cout << "Treble (0-10): ";
                     getline(cin, line);
-                    cmd.treble = stoi(line);
+                    if (!tryParseInt(line, cmd.treble)) valid = false;
+                    if (!valid) cout << "Invalid EQ value. Settings unchanged.\n";
                 }
                 player.endInput();
-                handler.addCommand(cmd);
+                if (valid) handler.addCommand(cmd);
                 break;
             }
 
